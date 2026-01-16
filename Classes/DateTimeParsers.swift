@@ -47,40 +47,36 @@ final class GPXDateParser {
         second.deallocate()
     }
     
+    // MARK:- ISO8601 Formatters (cached for performance)
+
+    /// Formatter with fractional seconds support (for milliseconds)
+    private static let isoFormatterWithMillis: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    /// Formatter without fractional seconds (for backward compatibility)
+    private static let isoFormatterWithoutMillis: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
     // MARK:- String To Date Parsers
-    
+
     /// Parses an ISO8601 formatted date string as native Date type.
+    /// Supports both formats: with milliseconds (yyyy-MM-ddTHH:mm:ss.SSSZ) and without (yyyy-MM-ddTHH:mm:ssZ)
     func parse(date string: String?) -> Date? {
         guard let NonNilString = string else {
             return nil
         }
-        
-        #if os(Linux)
-        return ISO8601DateFormatter().date(from: NonNilString)
-        #else // os(Linux)
-        _ = withVaList([year, month, day, hour, minute,
-                        second], { pointer in
-                            vsscanf(NonNilString, "%d-%d-%dT%d:%d:%dZ", pointer)
-                            
-        })
-        
 
-        components.year = year.pointee
-        components.minute = minute.pointee
-        components.day = day.pointee
-        components.hour = hour.pointee
-        components.month = month.pointee
-        components.second = second.pointee
-        
-        if let calendar = Self.calendarCache[0] {
-            return calendar.date(from: components)
+        // Try parsing with milliseconds first, then fallback to without
+        if let date = Self.isoFormatterWithMillis.date(from: NonNilString) {
+            return date
         }
-        
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        Self.calendarCache[0] = calendar
-        return calendar.date(from: components)
-        #endif
+        return Self.isoFormatterWithoutMillis.date(from: NonNilString)
     }
     
     /// Parses a year string as native Date type.

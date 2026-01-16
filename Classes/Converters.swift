@@ -54,8 +54,8 @@ internal final class Convert {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         
-        // dateTime（YYYY-MM-DDThh:mm:ssZ）
-        formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
+        // dateTime（YYYY-MM-DDThh:mm:ss.SSSZ）with milliseconds
+        formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'"
         
         return formatter
     }()
@@ -66,7 +66,7 @@ internal final class Convert {
     ///     - date: can be of any date and time, which will be converted to a formatted ISO8601 date and time string.
     ///
     /// - Returns:
-    ///     Formatted string according to ISO8601, which is of **"yyyy-MM-ddTHH:mm:ssZ"**
+    ///     Formatted string according to ISO8601, which is of **"yyyy-MM-ddTHH:mm:ss.SSSZ"** (with milliseconds)
     ///
     /// This method is currently heavily used for generating of GPX files / formatted string, as the native `Date` type must be converted to a `String` first.
     ///
